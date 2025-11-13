@@ -4,25 +4,69 @@
   <meta charset="utf-8">
   <title>Simple Movie Website</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .movie { border: 1px solid #ddd; padding: 10px; margin-bottom: 8px; }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 1200px; }
+    .movie { border: 1px solid #ddd; padding: 10px; margin-bottom: 8px; border-radius: 5px; }
     .controls { margin-top: 10px; }
     #playlist { margin-top: 20px; }
+    .search-container { 
+      background: #f5f5f5; 
+      padding: 15px; 
+      margin-bottom: 20px; 
+      border-radius: 5px; 
+    }
+    .search-container input, .search-container button {
+      padding: 8px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    .search-container button {
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    .search-container button:hover {
+      background: #0056b3;
+    }
+    .search-results-info {
+      margin: 10px 0;
+      color: #666;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
   <h1>Simple Movie Website</h1>
+  
+  <div class="search-container">
+    <h3 style="margin-top: 0;">Search Movies</h3>
+    <input type="text" id="searchQuery" placeholder="Search by title..." />
+    <input type="text" id="searchGenre" placeholder="Filter by genre..." />
+    <input type="text" id="searchYear" placeholder="Filter by year..." />
+    <button onclick="searchMovies()">Search</button>
+    <button onclick="clearSearch()" style="background: #6c757d;">Show All</button>
+  </div>
+  
+  <div id="searchInfo" class="search-results-info"></div>
   <div id="movies"></div>
 
   <h2>Your Playlist</h2>
   <div id="playlist"></div>
 
 <script>
-async function fetchMovies() {
-  const res = await fetch('/api/movies');
-  const movies = await res.json();
+function displayMovies(movies, searchInfo = '') {
   const container = document.getElementById('movies');
+  const infoContainer = document.getElementById('searchInfo');
+  
+  infoContainer.innerHTML = searchInfo;
   container.innerHTML = '';
+  
+  if (movies.length === 0) {
+    container.innerHTML = '<p><em>No movies found.</em></p>';
+    return;
+  }
+  
   movies.forEach(m => {
     const div = document.createElement('div');
     div.className = 'movie';
@@ -50,6 +94,55 @@ async function fetchMovies() {
     div.appendChild(addBtn);
     container.appendChild(div);
   });
+}
+
+async function fetchMovies() {
+  const res = await fetch('/api/movies');
+  const movies = await res.json();
+  displayMovies(movies);
+}
+
+async function searchMovies() {
+  const query = document.getElementById('searchQuery').value.trim();
+  const genre = document.getElementById('searchGenre').value.trim();
+  const year = document.getElementById('searchYear').value.trim();
+  
+  if (!query && !genre && !year) {
+    alert('Please enter at least one search criteria');
+    return;
+  }
+  
+  const params = new URLSearchParams();
+  if (query) params.append('q', query);
+  if (genre) params.append('genre', genre);
+  if (year) params.append('year', year);
+  
+  try {
+    const res = await fetch('/api/movies/search?' + params.toString());
+    const data = await res.json();
+    
+    if (!res.ok) {
+      alert('Search error: ' + (data.error || 'Unknown error'));
+      return;
+    }
+    
+    let searchInfo = `Found ${data.count} movie(s)`;
+    if (query) searchInfo += ` matching "${query}"`;
+    if (genre) searchInfo += ` in genre "${genre}"`;
+    if (year) searchInfo += ` from year ${year}`;
+    
+    displayMovies(data.results, searchInfo);
+  } catch (error) {
+    alert('Error performing search: ' + error.message);
+  }
+}
+
+function clearSearch() {
+  document.getElementById('searchQuery').value = '';
+  document.getElementById('searchGenre').value = '';
+  document.getElementById('searchYear').value = '';
+  document.getElementById('searchInfo').innerHTML = '';
+  fetchMovies();
 }
 
 async function loadPlaylist() {
