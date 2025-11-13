@@ -80,5 +80,16 @@ def get_playlist():
     items = [dict(row) for row in cur.fetchall()]
     return jsonify(items)
 
+def search_movies(query):
+    
+    db = get_db()
+    cur = db.execute("""
+        SELECT id, title, year, genre, synopsis
+        FROM movies
+        WHERE title LIKE ? OR synopsis LIKE ?
+        ORDER BY id
+    """, (f"%{query}%", f"%{query}%"))
+    return [dict(row) for row in cur.fetchall()]
+
 if __name__ == "__main__":
     app.run(debug=True)
