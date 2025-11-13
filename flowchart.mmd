@@ -1,0 +1,53 @@
+flowchart TB
+    %% Clients
+    A[User / Client Browser] --> B[Amazon Route 53<br/>DNS Routing]
+    B --> C[Elastic Load Balancer<br/>Application / Network LB]
+
+    %% Web & App Tier
+    subgraph Web_Tier[Web / App Tier - Auto Scaling Group]
+        direction TB
+        EC2A[Amazon EC2 Instance 1]
+        EC2B[Amazon EC2 Instance 2]
+        EC2C[Amazon EC2 Instance 3]
+    end
+
+    C --> Web_Tier
+
+    %% Backend Services
+    subgraph Backend[Backend Services]
+        direction TB
+        Lambda[AWS Lambda<br/>Serverless Functions]
+        S3[Amazon S3<br/>Static Files / Backups]
+        SNS[AWS SNS<br/>Notifications]
+    end
+
+    Web_Tier --> Lambda
+    Web_Tier --> S3
+    Web_Tier --> SNS
+
+    %% Database Layer
+    subgraph DB[Database Layer]
+        direction TB
+        RDS[Amazon RDS<br/>Relational Database]
+        Dynamo[Amazon DynamoDB<br/>NoSQL Database]
+    end
+
+    Lambda --> RDS
+    Lambda --> Dynamo
+
+    %% Monitoring & Security
+    subgraph Security_Monitoring[Security & Monitoring]
+        direction TB
+        CloudWatch[Amazon CloudWatch<br/>Monitoring & Logs]
+        IAM[AWS IAM<br/>Identity & Access Management]
+        WAF[AWS WAF<br/>Web Application Firewall]
+    end
+
+    Web_Tier --> CloudWatch
+    Web_Tier --> WAF
+    IAM --> Web_Tier
+    IAM --> Lambda
+
+    %% Outbound
+    DB --> CloudWatch
+    CloudWatch --> End[End: Dashboards / Alerts / Insights]
