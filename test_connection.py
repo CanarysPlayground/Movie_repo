@@ -52,6 +52,7 @@ try:
             print(f"   Playlist: {count}")
     else:
         print(f"\n⚠️  'movie_website_db' not found. Run insert_mongodb_data.py to create it.")
+
     
     print("\n" + "=" * 60)
     print("✅ Connection test completed successfully!")
