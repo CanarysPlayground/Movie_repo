@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template, g, redirect, url_for
 import sqlite3
 import os
-
+#data base path is added here
 DB_PATH = os.path.join(os.path.dirname(__file__), "movies.db")
 
 def get_db():
